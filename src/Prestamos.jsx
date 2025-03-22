@@ -1,42 +1,62 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getPrestamo } from "./Utility/apiPrestamo";
+import PaginatedTable from "./paginacion/paginacionPrestamo"; // ✅ Importamos el componente de paginación
+import Layout from "./Layout";
 
+/**
+ * Componente Prestamos
+ * 
+ * Este componente obtiene la lista de préstamos desde una API y la muestra 
+ * en una tabla paginada utilizando el componente `PaginatedTable`.
+ */
 function Prestamos() {
-  const [clientes, setClientes] = useState([]); // Estado para almacenar los datos
-  const [loading, setLoading] = useState(true); // Estado de carga
-  const [error, setError] = useState(null); // Estado para errores
-  //const navigate = useNavigate(); // Hook para la navegación
+  // Estado para almacenar la lista de clientes con sus préstamos
+  const [clientes, setClientes] = useState([]);
+  
+  // Estado para manejar la carga de datos
+  const [loading, setLoading] = useState(true);
+  
+  // Estado para manejar errores
+  const [error, setError] = useState(null);
 
-  // Función para cargar los datos desde la API
-  const cargarDatos = async () => {
-    try {
-      const response = await getPrestamo(); // Llamada a la API
-      setClientes(response.data); // Guardar los datos en el estado
-      setLoading(false);
-    } catch (err) {
-      setError("Error al cargar los datos");
-      setLoading(false);
-      //navigate("/errorpage"); // Redirigir a la página de error
-    }
-  };
-
+  /**
+   * Efecto secundario para cargar los datos de los préstamos al montar el componente.
+   */
   useEffect(() => {
+    const cargarDatos = async () => {
+      try {
+        const response = await getPrestamo(); // Llamada a la API
+        setClientes(response.data); // Guardamos los datos en el estado
+        setLoading(false);
+      } catch (err) {
+        setError("Error al cargar los datos");
+        setLoading(false);
+      }
+    };
     cargarDatos();
   }, []);
 
+  // Si los datos aún están cargando, mostramos un mensaje de carga
   if (loading) return <div>Cargando...</div>;
+
+  // Si ocurrió un error, mostramos el mensaje de error
   if (error) return <div>{error}</div>;
 
   return (
     <div>
+      {/* Botón para volver a la página principal */}
       <div>
-        <Link to="/" style={{ textDecoration: "none" }}>
+        {/* <Link to="/" style={{ textDecoration: "none" }}>
           <i className="bi bi-house-door fs-3" style={{ color: "white" }}></i>
-        </Link>
+        </Link> */}
+        <div>
+        <Layout></Layout>
+      </div>
       </div>
 
       <div className="card shadow border-0 mt-4">
+        {/* Encabezado de la tarjeta */}
         <div className="card-header bg-secondary bg-gradient ml-0 py-3">
           <div className="row">
             <div className="col-12 text-center">
@@ -46,37 +66,11 @@ function Prestamos() {
             </div>
           </div>
         </div>
+
+        {/* Cuerpo de la tarjeta donde se renderiza la tabla paginada */}
         <div className="card-body p-4">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>ClienteId</th>
-                <th>Nombre</th>
-                <th>Apellido</th>
-                <th>PrestamoId</th>
-                <th>Fecha Prestamo</th>
-                <th>Cantidad Pago</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {clientes.map((cliente) =>
-                cliente.prestamo.map((prestamo, index) => (
-                  <tr key={`${cliente.clienteId}-${index}`}>
-                    <td>{cliente.clienteId}</td>
-                    <td>{cliente.nombre}</td>
-                    <td>{cliente.apellido}</td>
-                    <td>{prestamo.prestamoId}</td>
-                    <td>
-                      {new Date(prestamo.fechaPrestamo).toLocaleDateString()}
-                    </td>
-                    <td>{prestamo.cantidadPago}</td>
-                    <td>{prestamo.total}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+          {/* ✅ Usamos el componente reutilizable de paginación */}
+          <PaginatedTable clientes={clientes} />
         </div>
       </div>
     </div>
@@ -84,3 +78,4 @@ function Prestamos() {
 }
 
 export default Prestamos;
+

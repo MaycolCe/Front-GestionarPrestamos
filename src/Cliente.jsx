@@ -81,14 +81,22 @@ function Cliente() {
                       <td>{prestamo.cliente.telefono}</td>
                     </tr>
                   ))} */}
-                  {[...new Map(prestamo.map((p) => [p.cliente.clienteId, p])).values(),].map((prestamo, index) => (
+                  {/* {[...new Map(prestamo.map((p) => [p.cliente.clienteId, p])).values(),].map((prestamo, index) => (
                     <tr key={`${prestamo.cliente.clienteId}-${index}`}>
                       <td>{prestamo.cliente.clienteId}</td>
                       <td>{prestamo.cliente.nombre}</td>
                       <td>{prestamo.cliente.apellido}</td>
                       <td>{prestamo.cliente.telefono}</td>
-                    </tr>
-                  ))}
+                    </tr> */}
+                    {[...new Map(prestamo.map((p) => [p.clienteId, p])).values()].map((prestamo, index) => (
+                      <tr key={`${prestamo.clienteId}-${index}`}>
+                        <td>{prestamo.clienteId}</td>
+                        <td>{prestamo.nombre}</td>
+                        <td>{prestamo.apellido}</td>
+                        <td>{prestamo.telefono}</td>
+                      </tr>
+                    ))}
+                  {/* ))} */}
                 </tbody>
               </table>
             </div>
@@ -119,13 +127,23 @@ function Cliente() {
                   </tr>
                 </thead>
                 <tbody>
+                  {/* {prestamo.map((prestamo, index) => */}
+                     {/* prestamo.cuota.length > 0 && prestamo.interes.length > 0 ? ( // Verificar que existan datos */}
+                      {/* // <tr key={`${prestamo.cuota[0].cantidadCuotas}-${index}`}>{" "} <td>{prestamo.cliente.apellido}</td> Acceder correctamente a cliente */}
+                        {/* <td>{prestamo.cuota[0].cantidadCuotas}</td>{" "} Campo corregido */}
+                        {/* <td>{prestamo.fechaPrestamo}</td>{" "} Nombre correcto del campo */}
+                        {/* <td>{prestamo.interes[0].interesGenerado}</td>{" "} Acceder al primer interés */}
+                        {/* <td>{prestamo.cuota[0].valorCuota}</td>{" "} Acceder correctamente a la cuota */}
+                      {/* </tr> */}
+                    {/* // ) : null */}
+                  {/* // )} */}
                   {prestamo.map((prestamo, index) =>
-                    prestamo.cuota.length > 0 && prestamo.interes.length > 0 ? ( // Verificar que existan datos
-                      <tr key={`${prestamo.cuota[0].cantidadCuotas}-${index}`}>{" "} {/* <td>{prestamo.cliente.apellido}</td> Acceder correctamente a cliente */}
-                        <td>{prestamo.cuota[0].cantidadCuotas}</td>{" "} {/* Campo corregido */}
-                        <td>{prestamo.fechaPrestamo}</td>{" "} {/* Nombre correcto del campo */}
-                        <td>{prestamo.interes[0].interesGenerado}</td>{" "} {/* Acceder al primer interés */}
-                        <td>{prestamo.cuota[0].valorCuota}</td>{" "} {/* Acceder correctamente a la cuota */}
+                    prestamo.cuotaId && prestamo.interesId ? ( // Verificar que existan datos
+                      <tr key={`${prestamo.cuotaId}-${index}`}>
+                        <td>{prestamo.cantidadCuotas}</td> {/* Accede directamente sin array */}
+                        <td>{prestamo.fechaPrestamo}</td> 
+                        <td>{prestamo.interesGenerado}</td> 
+                        <td>{prestamo.valorCuota}</td> 
                       </tr>
                     ) : null
                   )}
