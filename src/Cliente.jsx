@@ -1,30 +1,30 @@
-// import React from 'react'
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+// import { Link } from "react-router-dom";
 // import { getClientes } from "./Utility/apiClientes";
 import { getPrestamoInteresCuota } from "./Utility/apiPrestamoInteresCuota";
 import Layout from "./Layout";
+import Paginador from "./paginacion/Paginador";
 
 function Cliente() {
-  // const [cliente, setClientes] = useState([]); // Estado para almacenar los datos
-  const [prestamo, setPrestamos] = useState([]); // Estado para almacenar los datos
-  const [loading, setLoading] = useState(true); // Estado de carga
-  const [error, setError] = useState(null); // Estado para errores
-  //const navigate = useNavigate(); // Hook para la navegación
+  const [prestamo, setPrestamos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const rowsPerPage = 10;
 
-  // Función para cargar los datos desde la API
   const cargarDatos = async () => {
     try {
-      // const response = await getClientes(); // Llamada a la API
-      const response = await getPrestamoInteresCuota(); // Llamada a la API
-      console.log(response.data); // Verificar los datos
-      // setClientes(response.data); // Guardar los datos en el estado
-      setPrestamos(response.data); // Guardar los datos en el estado
+      const response = await getPrestamoInteresCuota();
+      if (response.data && Array.isArray(response.data)) {
+        setPrestamos(response.data);
+      } else {
+        setPrestamos([]);
+      }
       setLoading(false);
     } catch (err) {
       setError("Error al cargar los datos");
       setLoading(false);
-      //navigate("/errorpage"); // Redirigir a la página de error
     }
   };
 
@@ -35,6 +35,21 @@ function Cliente() {
   if (loading) return <div>Cargando...</div>;
   if (error) return <div>{error}</div>;
 
+  const filteredPrestamos = (prestamo || []).filter(
+    (p) =>
+      p.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.apellido?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.clienteId?.toString().includes(searchTerm)
+  );
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredPrestamos.length / rowsPerPage)
+  );
+  const indexOfLastRow = currentPage * rowsPerPage;
+  const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+  const currentRows = filteredPrestamos.slice(indexOfFirstRow, indexOfLastRow);
+
   return (
     <div>
       <div>
@@ -42,16 +57,14 @@ function Cliente() {
       </div>
       <div className="container">
         <div className="row">
+          <input
+            type="text"
+            placeholder="Buscar por nombre, apellido o ID"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="form-control mb-3"
+          />
           <div className="card-body p-4 col-12 col-md-6">
-            {/* <div>
-              <Link to="/" style={{ textDecoration: "none" }}>
-                <i
-                  className="bi bi-house-door fs-3"
-                  style={{ color: "blue" }}
-                ></i>
-              </Link>
-            </div> */}
-
             <div className="card shadow border-0 mt-4">
               <div className="card-header bg-secondary bg-gradient ml-0 py-3">
                 <div className="row">
@@ -62,7 +75,6 @@ function Cliente() {
                   </div>
                 </div>
               </div>
-
               <table className="table">
                 <thead>
                   <tr>
@@ -73,39 +85,29 @@ function Cliente() {
                   </tr>
                 </thead>
                 <tbody>
-                  {/* {prestamo.map((prestamo, index) => (
-                    <tr key={`${prestamo.cliente.clienteId}-${index}`}>
-                      <td>{prestamo.cliente.clienteId}</td>
-                      <td>{prestamo.cliente.nombre}</td>
-                      <td>{prestamo.cliente.apellido}</td>
-                      <td>{prestamo.cliente.telefono}</td>
+                  {[
+                    ...new Map(
+                      currentRows.map((p) => [p.clienteId, p])
+                    ).values(),
+                  ].map((prestamo, index) => (
+                    <tr key={`${prestamo.clienteId}-${index}`}>
+                      <td>{prestamo.clienteId}</td>
+                      <td>{prestamo.nombre}</td>
+                      <td>{prestamo.apellido}</td>
+                      <td>{prestamo.telefono}</td>
                     </tr>
-                  ))} */}
-                  {/* {[...new Map(prestamo.map((p) => [p.cliente.clienteId, p])).values(),].map((prestamo, index) => (
-                    <tr key={`${prestamo.cliente.clienteId}-${index}`}>
-                      <td>{prestamo.cliente.clienteId}</td>
-                      <td>{prestamo.cliente.nombre}</td>
-                      <td>{prestamo.cliente.apellido}</td>
-                      <td>{prestamo.cliente.telefono}</td>
-                    </tr> */}
-                    {[...new Map(prestamo.map((p) => [p.clienteId, p])).values()].map((prestamo, index) => (
-                      <tr key={`${prestamo.clienteId}-${index}`}>
-                        <td>{prestamo.clienteId}</td>
-                        <td>{prestamo.nombre}</td>
-                        <td>{prestamo.apellido}</td>
-                        <td>{prestamo.telefono}</td>
-                      </tr>
-                    ))}
-                  {/* ))} */}
+                  ))}
                 </tbody>
               </table>
+                <Paginador
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  setCurrentPage={setCurrentPage}
+                />
             </div>
           </div>
 
-          <div
-            className="card-body p-4 col-12 col-md-6"
-            //style={{ marginTop: "41px" }}
-          >
+          <div className="card-body p-4 col-12 col-md-6">
             <div className="card shadow border-0 mt-4">
               <div className="card-header bg-secondary bg-gradient ml-0 py-3">
                 <div className="row">
@@ -120,35 +122,32 @@ function Cliente() {
               <table className="table">
                 <thead>
                   <tr>
-                    <th><span>Cantidad</span> <br/> <span>Cuotas</span></th>
+                    <th>
+                      <span>Cantidad</span> <br /> <span>Cuotas</span>
+                    </th>
                     <th>Fecha</th>
                     <th>Interes</th>
                     <th>CuotaMensual</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {/* {prestamo.map((prestamo, index) => */}
-                     {/* prestamo.cuota.length > 0 && prestamo.interes.length > 0 ? ( // Verificar que existan datos */}
-                      {/* // <tr key={`${prestamo.cuota[0].cantidadCuotas}-${index}`}>{" "} <td>{prestamo.cliente.apellido}</td> Acceder correctamente a cliente */}
-                        {/* <td>{prestamo.cuota[0].cantidadCuotas}</td>{" "} Campo corregido */}
-                        {/* <td>{prestamo.fechaPrestamo}</td>{" "} Nombre correcto del campo */}
-                        {/* <td>{prestamo.interes[0].interesGenerado}</td>{" "} Acceder al primer interés */}
-                        {/* <td>{prestamo.cuota[0].valorCuota}</td>{" "} Acceder correctamente a la cuota */}
-                      {/* </tr> */}
-                    {/* // ) : null */}
-                  {/* // )} */}
-                  {prestamo.map((prestamo, index) =>
-                    prestamo.cuotaId && prestamo.interesId ? ( // Verificar que existan datos
+                  {currentRows.map((prestamo, index) =>
+                    prestamo.cuotaId && prestamo.interesId ? (
                       <tr key={`${prestamo.cuotaId}-${index}`}>
-                        <td>{prestamo.cantidadCuotas}</td> {/* Accede directamente sin array */}
-                        <td>{prestamo.fechaPrestamo}</td> 
-                        <td>{prestamo.interesGenerado}</td> 
-                        <td>{prestamo.valorCuota}</td> 
+                        <td>{prestamo.cantidadCuotas}</td>
+                        <td>{prestamo.fechaPrestamo}</td>
+                        <td>{prestamo.interesGenerado}</td>
+                        <td>{prestamo.valorCuota}</td>
                       </tr>
                     ) : null
                   )}
                 </tbody>
-              </table>
+              </table>              
+                <Paginador
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  setCurrentPage={setCurrentPage}
+                />
             </div>
           </div>
         </div>

@@ -1,38 +1,43 @@
 import { useState } from "react";
 
-/**
- * Componente para mostrar una tabla paginada de préstamos con información de clientes.
- * 
- * @param {Array} clientes - Lista de clientes con sus respectivos préstamos.
- */
 const PaginatedTable = ({ clientes }) => {
-  // Estado para la página actual
   const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10; // Número de filas a mostrar por página
+  const [searchTerm, setSearchTerm] = useState("");
+  const rowsPerPage = 10;
 
-  /**
-   * Transformamos los datos para obtener una lista de préstamos
-   * con información del cliente asociada a cada préstamo.
-   */
   const prestamos = clientes.flatMap(cliente =>
     cliente.prestamo.map(prestamo => ({
       ...prestamo,
       clienteId: cliente.clienteId,
       nombre: cliente.nombre,
-      apellido: cliente.apellido
+      apellido: cliente.apellido,
+      prestamoId: prestamo.prestamoId
     }))
   );
 
-  // Cálculo de los índices de la paginación
-  const indexOfLastRow = currentPage * rowsPerPage; // Último índice de la página actual
-  const indexOfFirstRow = indexOfLastRow - rowsPerPage; // Primer índice de la página actual
-  const currentRows = prestamos.slice(indexOfFirstRow, indexOfLastRow); // Filas actuales a mostrar
+  // Filtrar los préstamos según el término de búsqueda
+  const filteredPrestamos = prestamos.filter(prestamo =>
+    prestamo.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    prestamo.apellido.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    prestamo.clienteId.toString().includes(searchTerm) ||
+    prestamo.prestamoId.toString().includes(searchTerm)
+  );
 
-  // Calcular el número total de páginas
-  const totalPages = Math.ceil(prestamos.length / rowsPerPage);
+  const indexOfLastRow = currentPage * rowsPerPage;
+  const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+  const currentRows = filteredPrestamos.slice(indexOfFirstRow, indexOfLastRow);
+  const totalPages = Math.ceil(filteredPrestamos.length / rowsPerPage);
 
   return (
     <div>
+      {/* Campo de búsqueda */}
+      <input
+        type="text"
+        placeholder="Buscar por nombre, apellido o ID"
+        value={searchTerm}
+        onChange={e => setSearchTerm(e.target.value)}
+      />
+      
       {/* Tabla de datos */}
       <table className="table">
         <thead>
@@ -63,7 +68,6 @@ const PaginatedTable = ({ clientes }) => {
 
       {/* Controles de paginación */}
       <div>
-        {/* Botón de página anterior */}
         <button 
           onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
           disabled={currentPage === 1}
@@ -71,10 +75,8 @@ const PaginatedTable = ({ clientes }) => {
           {"< Anterior"}
         </button>
         
-        {/* Indicador de página actual */}
         <span> Página {currentPage} de {totalPages} </span>
         
-        {/* Botón de página siguiente */}
         <button 
           onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} 
           disabled={currentPage === totalPages}
